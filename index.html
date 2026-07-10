@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Independência Financeira (Aportes Fim do Ano)</title>
+    <style>
+        :root {
+            --primary: #2b6cb0;
+            --primary-dark: #1a365d;
+            --success: #2f855a;
+            --salario-color: #b7791f;
+            --bg: #f7fafc;
+            --card-bg: #ffffff;
+            --text: #2d3748;
+            --border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; padding: 20px 0; border-bottom: 3px solid var(--primary); }
+        header h1 { color: var(--primary-dark); font-size: 2rem; margin-bottom: 10px; }
+        header p { color: #4a5568; font-size: 1.1rem; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 768px) { .grid { grid-template-columns: 1fr 2fr; } }
+        .card { background: var(--card-bg); border-radius: 8px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .card h2 { color: var(--primary); font-size: 1.3rem; margin-bottom: 20px; border-left: 4px solid var(--primary); padding-left: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.95rem; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 5px; font-size: 1rem; }
+        button { width: 100%; background-color: var(--primary); color: white; border: none; padding: 12px; border-radius: 5px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background-color: var(--primary-dark); }
+        .results-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 25px; }
+        @media (min-width: 480px) { .results-grid { grid-template-columns: 1fr 1fr; } }
+        .result-box { padding: 15px; border-radius: 6px; background: #f8fafc; border: 1px solid var(--border); text-align: center; }
+        .result-box.highlight { background: #ebf8ff; border-color: #bee3f8; }
+        .result-box.success { background: #f0fff4; border-color: #c6f6d5; }
+        .result-box.salario-box { background: #fffaf0; border-color: #feebc8; }
+        .result-box span { display: block; font-size: 0.85rem; color: #718096; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
+        .result-box strong { font-size: 1.4rem; color: var(--primary-dark); }
+        .result-box.salario-box strong { color: var(--salario-color); }
+        .result-box.success strong { color: var(--success); }
+        .verdict-box { padding: 15px; border-radius: 6px; margin-top: 20px; font-weight: 500; margin-bottom: 25px; }
+        .verdict-box.success { background-color: #f0fff4; border-left: 4px solid var(--success); color: #22543d; }
+        .verdict-box.danger { background-color: #fff5f5; border-left: 4px solid #e53e3e; color: #742a2a; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
+        th { background-color: var(--primary); color: white; padding: 12px 10px; text-align: left; }
+        td { padding: 12px 10px; border-bottom: 1px solid var(--border); }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        .col-salario { color: var(--salario-color) !important; font-weight: bold; background-color: #fffaf0 !important; }
+        .table-container { overflow-x: auto; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Simulador de Independência Financeira</h1>
+            <p>Regime de Aportes no FIM de Cada Ano (Postecipado)</p>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Parâmetros</h2>
+                <div class="form-group"><label>Salário Mensal Inicial (R$)</label><input type="number" id="salario" value="18000"></div>
+                <div class="form-group"><label>Correção Anual do Salário (%)</label><input type="number" id="correcao" value="3"></div>
+                <div class="form-group"><label>Primeiro Aporte Anual (R$)</label><input type="number" id="aporte" value="38000"></div>
+                <div class="form-group"><label>Crescimento Anual Aporte (%)</label><input type="number" id="crescimentoAporte" value="3"></div>
+                <div class="form-group"><label>Rentabilidade do Fundo (% a.a.)</label><input type="number" id="rentabilidade" value="14"></div>
+                <div class="form-group"><label>Período total (Anos)</label><input type="number" id="anos" value="18"></div>
+                <button onclick="calcular()">Simular Cenários</button>
+            </div>
+
+            <div class="card">
+                <h2>Resultados no Final do Período</h2>
+                <div class="results-grid">
+                    <div class="result-box salario-box"><span>Salário Corrigido (Mensal)</span><strong id="resSalario">R$ 0,00</strong></div>
+                    <div class="result-box highlight"><span>Patrimônio Acumulado</span><strong id="resPatrimonio">R$ 0,00</strong></div>
+                    <div class="result-box"><span>Último Aporte Efetuado</span><strong id="resUltimoAporte">R$ 0,00</strong></div>
+                    <div class="result-box success"><span>Juros Gerados (Mensal)</span><strong id="resJuros">R$ 0,00</strong></div>
+                </div>
+                <div id="verdict" class="verdict-box"></div>
+                <h2>Demonstração da Evolução Anual</h2>
+                <div class="table-container">
+                    <table id="evolucaoTable">
+                        <thead>
+                            <tr>
+                                <th>Ano</th>
+                                <th>Salário Corrigido (Mensal)</th>
+                                <th>Aporte Anual (Fim)</th>
+                                <th>Acumulação (Fundo)</th>
+                                <th>Juros Ganhos (Mensal)*</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function formatarMoeda(valor) { return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+        function calcular() {
+            const salarioInicial = parseFloat(document.getElementById('salario').value);
+            const taxaCorrecao = parseFloat(document.getElementById('correcao').value) / 100;
+            const primeiroAporte = parseFloat(document.getElementById('aporte').value);
+            const taxaCrescimentoAporte = parseFloat(document.getElementById('crescimentoAporte').value) / 100;
+            const rentabilidadeAnual = parseFloat(document.getElementById('rentabilidade').value) / 100;
+            const anos = parseInt(document.getElementById('anos').value);
+
+            const taxaMensal = Math.pow(1 + rentabilidadeAnual, 1/12) - 1;
+            const tbody = document.querySelector('#evolucaoTable tbody');
+            tbody.innerHTML = '';
+
+            let saldoAtual = 0;
+            let aporteAtual = primeiroAporte;
+            let salarioAtual = salarioInicial;
+            let ultimoAporteRegistrado = primeiroAporte;
+
+            for (let i = 1; i <= anos; i++) {
+                ultimoAporteRegistrado = aporteAtual;
+                
+                // Regime Postecipado: O saldo antigo rende primeiro, e o novo aporte entra no fim do ano
+                saldoAtual = (saldoAtual * (1 + rentabilidadeAnual)) + aporteAtual;
+                let jurosMensaisDesteAno = saldoAtual * taxaMensal;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>Ano ${i}</td>
+                    <td class="col-salario">${formatarMoeda(salarioAtual)}</td>
+                    <td>${formatarMoeda(aporteAtual)}</td>
+                    <td style="font-weight:600; color:var(--primary-dark);">${formatarMoeda(saldoAtual)}</td>
+                    <td style="color:var(--success); font-weight:600;">${formatarMoeda(jurosMensaisDesteAno)}</td>
+                `;
+                tbody.appendChild(tr);
+
+                salarioAtual *= (1 + taxaCorrecao);
+                aporteAtual *= (1 + taxaCrescimentoAporte);
+            }
+
+            const salarioFinal = salarioInicial * Math.pow(1 + taxaCorrecao, anos);
+            const jurosMensaisFinais = saldoAtual * taxaMensal;
+
+            document.getElementById('resSalario').innerText = formatarMoeda(salarioFinal);
+            document.getElementById('resPatrimonio').innerText = formatarMoeda(saldoAtual);
+            document.getElementById('resUltimoAporte').innerText = formatarMoeda(ultimoAporteRegistrado);
+            document.getElementById('resJuros').innerText = formatarMoeda(jurosMensaisFinais);
+
+            const verdictBox = document.getElementById('verdict');
+            if (jurosMensaisFinais >= salarioFinal) {
+                verdictBox.className = "verdict-box success";
+                verdictBox.innerHTML = `<strong>Parabéns!</strong> No ano ${anos}, você atinge a Independência Financeira Plena. Seus juros mensais superam o seu salário corrigido em ${formatarMoeda(jurosMensaisFinais - salarioFinal)}.`;
+            } else {
+                verdictBox.className = "verdict-box danger";
+                verdictBox.innerHTML = `<strong>Atenção:</strong> Os juros mensais ficam ${formatarMoeda(salarioFinal - jurosMensaisFinais)} abaixo do salário final.`;
+            }
+        }
+        window.onload = calcular;
+    </script>
+</body>
+</html>
