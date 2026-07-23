@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador de Independência Financeira (Aportes Fim do Ano)</title>
+    <title>Simulador de Independência Financeira</title>
     <style>
+        /* ==========================================
+           ESTILOS DA INTERFACE WEB (CALCULADORA)
+           ========================================== */
         :root {
             --primary: #2b6cb0;
             --primary-dark: #1a365d;
@@ -14,23 +17,36 @@
             --card-bg: #ffffff;
             --text: #2d3748;
             --border: #e2e8f0;
+            /* Cores do Relatório */
+            --math-bg: #f8fafc;
+            --math-border: #cbd5e0;
+            --success-bg: #f0fff4;
+            --success-border: #38a169;
+            --success-text: #2f855a;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding: 20px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); line-height: 1.6; }
+        
+        #app-interface { padding: 20px; }
         .container { max-width: 1100px; margin: 0 auto; }
         header { text-align: center; margin-bottom: 30px; padding: 20px 0; border-bottom: 3px solid var(--primary); }
-        header h1 { color: var(--primary-dark); font-size: 2rem; margin-bottom: 10px; }
+        header h1 { color: var(--primary-dark); font-size: 2rem; margin-bottom: 5px; }
         header p { color: #4a5568; font-size: 1.1rem; }
         .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
         @media (min-width: 768px) { .grid { grid-template-columns: 1fr 2fr; } }
+        
         .card { background: var(--card-bg); border-radius: 8px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); }
         .card h2 { color: var(--primary); font-size: 1.3rem; margin-bottom: 20px; border-left: 4px solid var(--primary); padding-left: 10px; }
+        
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.95rem; }
         .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 5px; font-size: 1rem; }
-        button { width: 100%; background-color: var(--primary); color: white; border: none; padding: 12px; border-radius: 5px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        button { width: 100%; background-color: var(--primary); color: white; border: none; padding: 12px; border-radius: 5px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
         button:hover { background-color: var(--primary-dark); }
+        button.btn-pdf { background-color: #4a5568; margin-top: 10px; }
+        button.btn-pdf:hover { background-color: #2d3748; }
+        
         .results-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 25px; }
         @media (min-width: 480px) { .results-grid { grid-template-columns: 1fr 1fr; } }
         .result-box { padding: 15px; border-radius: 6px; background: #f8fafc; border: 1px solid var(--border); text-align: center; }
@@ -41,66 +57,161 @@
         .result-box strong { font-size: 1.4rem; color: var(--primary-dark); }
         .result-box.salario-box strong { color: var(--salario-color); }
         .result-box.success strong { color: var(--success); }
+        
         .verdict-box { padding: 15px; border-radius: 6px; margin-top: 20px; font-weight: 500; margin-bottom: 25px; }
         .verdict-box.success { background-color: #f0fff4; border-left: 4px solid var(--success); color: #22543d; }
         .verdict-box.danger { background-color: #fff5f5; border-left: 4px solid #e53e3e; color: #742a2a; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
-        th { background-color: var(--primary); color: white; padding: 12px 10px; text-align: left; }
-        td { padding: 12px 10px; border-bottom: 1px solid var(--border); }
-        tr:nth-child(even) { background-color: #f8fafc; }
+        
+        .web-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
+        .web-table th { background-color: var(--primary); color: white; padding: 12px 10px; text-align: left; }
+        .web-table td { padding: 12px 10px; border-bottom: 1px solid var(--border); }
+        .web-table tr:nth-child(even) { background-color: #f8fafc; }
         .col-salario { color: var(--salario-color) !important; font-weight: bold; background-color: #fffaf0 !important; }
         .table-container { overflow-x: auto; margin-top: 20px; }
+
+        /* ==========================================
+           ESTILOS DO RELATÓRIO DE IMPRESSÃO (PDF)
+           ========================================== */
+        #print-report { 
+            display: none; 
+            font-family: 'Georgia', serif; 
+            color: #1a202c;
+            line-height: 1.25; 
+            font-size: 10pt; 
+        }
+        
+        /* Estrutura de Páginas para Numeração */
+        #print-report .page-container {
+            position: relative;
+            min-height: 26.5cm; /* Altura útil de uma folha A4 descontando margens */
+        }
+        
+        #print-report .page-footer {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            font-size: 9pt;
+            font-family: 'Arial', sans-serif;
+            color: #718096;
+            font-weight: bold;
+        }
+
+        #print-report h1 { font-family: 'Arial', sans-serif; color: var(--primary); text-align: center; font-size: 15pt; margin-bottom: 4px; font-weight: bold; }
+        #print-report h2 { font-family: 'Arial', sans-serif; color: #4a5568; text-align: center; font-size: 11pt; font-weight: normal; margin-bottom: 10px; border-bottom: 1px solid var(--primary); padding-bottom: 6px; }
+        #print-report h3 { font-family: 'Arial', sans-serif; color: var(--primary); font-size: 10.5pt; margin-top: 12px; margin-bottom: 4px; }
+        #print-report p { font-size: 10pt; margin-bottom: 5px; text-align: justify; }
+        
+        #print-report .math-block { 
+            background-color: var(--math-bg); 
+            border: 1px solid var(--math-border);
+            padding: 6px 12px; 
+            margin: 8px auto; 
+            border-radius: 6px; 
+            font-size: 10pt; 
+            font-family: 'Cambria Math', 'Times New Roman', serif; 
+            font-style: italic; 
+            text-align: center; 
+            width: 85%; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            line-height: 1.4; 
+        }
+        
+        #print-report ul.var-list { 
+            list-style-type: none; 
+            padding-left: 20px; 
+            margin-bottom: 8px; 
+            margin-top: 4px;
+        }
+        #print-report ul.var-list li { 
+            margin-bottom: 3px; 
+            font-size: 10pt; 
+        }
+        
+        #print-report .conclusion-box { background-color: var(--success-bg); border: 2px solid var(--success-border); padding: 12px 15px; border-radius: 8px; margin-top: 15px; }
+        #print-report .conclusion-box h3 { color: var(--success-text); margin-top: 0; text-align: center; border-bottom: none; font-style: normal; font-family: 'Arial', sans-serif; font-weight: bold; font-size: 11.5pt; margin-bottom: 6px;}
+        #print-report .conclusion-box p { font-size: 10pt; text-align: center; color: #22543d; font-family: 'Georgia', serif; margin-bottom: 4px;}
+        
+        #print-report table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 9.5pt; font-family: 'Arial', sans-serif; }
+        #print-report th, #print-report td { border: 1px solid #cbd5e0; padding: 6px 8px; text-align: left; }
+        #print-report th { background-color: #f8fafc; color: #2d3748; font-weight: bold; border-bottom: 2px solid var(--primary);}
+        
+        /* Regras Nativas da Impressão */
+        @media print {
+            @page {
+                size: A4;
+                margin-top: 10mm;
+                margin-right: 10mm;
+                margin-bottom: 20mm; /* Rodapé: 2cm */
+                margin-left: 20mm;   /* Esquerda: 2cm */
+            }
+            body { background-color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
+            #app-interface { display: none !important; }
+            #print-report { display: block !important; }
+            .page-break { page-break-before: always; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Simulador de Independência Financeira</h1>
-            <p>Regime de Aportes no FIM de Cada Ano (Postecipado)</p>
-        </header>
 
-        <div class="grid">
-            <div class="card">
-                <h2>Parâmetros</h2>
-                <div class="form-group"><label>Salário Mensal Inicial (R$)</label><input type="number" id="salario" value="18000"></div>
-                <div class="form-group"><label>Correção Anual do Salário (%)</label><input type="number" id="correcao" value="3"></div>
-                <div class="form-group"><label>Primeiro Aporte Anual (R$)</label><input type="number" id="aporte" value="38000"></div>
-                <div class="form-group"><label>Crescimento Anual Aporte (%)</label><input type="number" id="crescimentoAporte" value="3"></div>
-                <div class="form-group"><label>Rentabilidade do Fundo (% a.a.)</label><input type="number" id="rentabilidade" value="14"></div>
-                <div class="form-group"><label>Período total (Anos)</label><input type="number" id="anos" value="18"></div>
-                <button onclick="calcular()">Simular Cenários</button>
-            </div>
+    <!-- INTERFACE DO APLICATIVO -->
+    <div id="app-interface">
+        <div class="container">
+            <header>
+                <h1>Simulador de Independência Financeira</h1>
+                <p>Projeção de Longo Prazo e Comparativo Salarial</p>
+            </header>
 
-            <div class="card">
-                <h2>Resultados no Final do Período</h2>
-                <div class="results-grid">
-                    <div class="result-box salario-box"><span>Salário Corrigido (Mensal)</span><strong id="resSalario">R$ 0,00</strong></div>
-                    <div class="result-box highlight"><span>Patrimônio Acumulado</span><strong id="resPatrimonio">R$ 0,00</strong></div>
-                    <div class="result-box"><span>Último Aporte Efetuado</span><strong id="resUltimoAporte">R$ 0,00</strong></div>
-                    <div class="result-box success"><span>Juros Gerados (Mensal)</span><strong id="resJuros">R$ 0,00</strong></div>
+            <div class="grid">
+                <div class="card">
+                    <h2>Parâmetros</h2>
+                    <div class="form-group"><label>Salário Mensal Inicial (R$)</label><input type="number" id="salario" value="18000"></div>
+                    <div class="form-group"><label>Correção Anual do Salário (%)</label><input type="number" id="correcao" value="3"></div>
+                    <div class="form-group"><label>Primeiro Aporte Anual (R$)</label><input type="number" id="aporte" value="38000"></div>
+                    <div class="form-group"><label>Crescimento Anual Aporte (%)</label><input type="number" id="crescimentoAporte" value="3"></div>
+                    <div class="form-group"><label>Rentabilidade do Fundo (% a.a.)</label><input type="number" id="rentabilidade" value="14"></div>
+                    <div class="form-group"><label>Período total (Anos)</label><input type="number" id="anos" value="18"></div>
+                    <button onclick="calcular()">Calcular Simulação</button>
+                    <button class="btn-pdf" onclick="imprimirRelatorio()">🖨️ Exportar Relatório PDF</button>
                 </div>
-                <div id="verdict" class="verdict-box"></div>
-                <h2>Demonstração da Evolução Anual</h2>
-                <div class="table-container">
-                    <table id="evolucaoTable">
-                        <thead>
-                            <tr>
-                                <th>Ano</th>
-                                <th>Salário Corrigido (Mensal)</th>
-                                <th>Aporte Anual (Fim)</th>
-                                <th>Acumulação (Fundo)</th>
-                                <th>Juros Ganhos (Mensal)*</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+
+                <div class="card">
+                    <h2>Resultados no Final do Período</h2>
+                    <div class="results-grid">
+                        <div class="result-box salario-box"><span>Salário Projetado (Ano N+1)</span><strong id="resSalario">R$ 0,00</strong></div>
+                        <div class="result-box highlight"><span>Patrimônio Acumulado</span><strong id="resPatrimonio">R$ 0,00</strong></div>
+                        <div class="result-box"><span>Último Aporte</span><strong id="resUltimoAporte">R$ 0,00</strong></div>
+                        <div class="result-box success"><span>Juros Gerados (Mensal)</span><strong id="resJuros">R$ 0,00</strong></div>
+                    </div>
+                    <div id="verdict" class="verdict-box"></div>
+                    
+                    <h2>Demonstração da Evolução Anual</h2>
+                    <div class="table-container">
+                        <table class="web-table" id="evolucaoTable">
+                            <thead>
+                                <tr>
+                                    <th>Ano</th>
+                                    <th>Salário Mensal</th>
+                                    <th>Aporte Anual</th>
+                                    <th>Patrimônio Acumulado</th>
+                                    <th>Juros Mensais</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ÁREA DE IMPRESSÃO -->
+    <div id="print-report"></div>
+
     <script>
         function formatarMoeda(valor) { return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+        function formataNum(valor, maxDecimals = 6) { return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: maxDecimals }); }
+
+        let dadosGlobais = {};
 
         function calcular() {
             const salarioInicial = parseFloat(document.getElementById('salario').value);
@@ -117,12 +228,10 @@
             let saldoAtual = 0;
             let aporteAtual = primeiroAporte;
             let salarioAtual = salarioInicial;
-            let ultimoAporteRegistrado = primeiroAporte;
+            let ultimoAporteRegistrado = 0;
 
             for (let i = 1; i <= anos; i++) {
                 ultimoAporteRegistrado = aporteAtual;
-                
-                // Regime Postecipado: O saldo antigo rende primeiro, e o novo aporte entra no fim do ano
                 saldoAtual = (saldoAtual * (1 + rentabilidadeAnual)) + aporteAtual;
                 let jurosMensaisDesteAno = saldoAtual * taxaMensal;
 
@@ -140,23 +249,165 @@
                 aporteAtual *= (1 + taxaCrescimentoAporte);
             }
 
-            const salarioFinal = salarioInicial * Math.pow(1 + taxaCorrecao, anos);
+            const salarioFinalProjetado = salarioInicial * Math.pow(1 + taxaCorrecao, anos);
             const jurosMensaisFinais = saldoAtual * taxaMensal;
 
-            document.getElementById('resSalario').innerText = formatarMoeda(salarioFinal);
+            document.getElementById('resSalario').innerText = formatarMoeda(salarioFinalProjetado);
             document.getElementById('resPatrimonio').innerText = formatarMoeda(saldoAtual);
             document.getElementById('resUltimoAporte').innerText = formatarMoeda(ultimoAporteRegistrado);
             document.getElementById('resJuros').innerText = formatarMoeda(jurosMensaisFinais);
 
             const verdictBox = document.getElementById('verdict');
-            if (jurosMensaisFinais >= salarioFinal) {
+            if (jurosMensaisFinais >= salarioFinalProjetado) {
                 verdictBox.className = "verdict-box success";
-                verdictBox.innerHTML = `<strong>Parabéns!</strong> No ano ${anos}, você atinge a Independência Financeira Plena. Seus juros mensais superam o seu salário corrigido em ${formatarMoeda(jurosMensaisFinais - salarioFinal)}.`;
+                verdictBox.innerHTML = `<strong>Parabéns!</strong> Ao final dos ${anos} anos, seus juros mensais superam o seu salário projetado em ${formatarMoeda(jurosMensaisFinais - salarioFinalProjetado)}.`;
             } else {
                 verdictBox.className = "verdict-box danger";
-                verdictBox.innerHTML = `<strong>Atenção:</strong> Os juros mensais ficam ${formatarMoeda(salarioFinal - jurosMensaisFinais)} abaixo do salário final.`;
+                verdictBox.innerHTML = `<strong>Atenção:</strong> Os juros mensais ficam ${formatarMoeda(salarioFinalProjetado - jurosMensaisFinais)} abaixo do salário final do período.`;
             }
+
+            dadosGlobais = { salarioInicial, taxaCorrecao, primeiroAporte, taxaCrescimentoAporte, rentabilidadeAnual, anos, taxaMensal, ultimoAporteRegistrado, saldoAtual, salarioFinalProjetado, jurosMensaisFinais };
         }
+
+        function imprimirRelatorio() {
+            if (!dadosGlobais.anos) {
+                alert("Por favor, calcule a simulação antes de exportar o relatório.");
+                return;
+            }
+
+            const d = dadosGlobais;
+            const fat_i = Math.pow(1 + d.rentabilidadeAnual, d.anos);
+            const fat_g = Math.pow(1 + d.taxaCrescimentoAporte, d.anos);
+            const diferencaTaxas = d.rentabilidadeAnual - d.taxaCrescimentoAporte;
+            const multiFator = (fat_i - fat_g) / diferencaTaxas;
+            
+            const html = `
+                <!-- CONTEÚDO DA PÁGINA 1 -->
+                <div class="page-container">
+                    <h1>Relatório de Projeção e Independência Financeira</h1>
+                    <h2>Análise Comparativa: Evolução Salarial vs. Estratégia de Aportes Crescentes</h2>
+
+                    <p>Este documento apresenta a memória de cálculo detalhada e a análise comparativa entre a evolução de uma receita salarial corrigida periodicamente e uma estratégia de investimentos de longo prazo baseada em aportes anuais crescentes.</p>
+
+                    <h3>1. Cenário I: Evolução do Salário Mensal</h3>
+                    <p>O cenário inicial considera um salário nominal de <strong>${formatarMoeda(d.salarioInicial)} por mês</strong>, sofrendo uma correção anual de <strong>${formataNum(d.taxaCorrecao*100, 2)}% ao ano (a.a.)</strong> de forma composta ao longo de <strong>${d.anos} anos</strong>.</p>
+
+                    <p><strong>Fórmula de Juros Compostos Aplicada:</strong></p>
+                    <div class="math-block">M = P &times; (1 + i)<sup>n</sup></div>
+
+                    <p><strong>Onde:</strong></p>
+                    <ul class="var-list">
+                        <li><strong>P</strong> - Valor Inicial Mensal = ${formatarMoeda(d.salarioInicial)}</li>
+                        <li><strong>i</strong> - Taxa de Correção Anual = ${formataNum(d.taxaCorrecao*100,2)}% = ${formataNum(d.taxaCorrecao, 4)}</li>
+                        <li><strong>n</strong> - Tempo = ${d.anos} anos</li>
+                    </ul>
+
+                    <p><strong>Cálculo Passo a Passo:</strong></p>
+                    <div class="math-block">
+                        M = ${formataNum(d.salarioInicial, 2)} &times; (1 + ${formataNum(d.taxaCorrecao, 4)})<sup>${d.anos}</sup><br>
+                        M = ${formataNum(d.salarioInicial, 2)} &times; (1,${(d.taxaCorrecao*100).toString().padStart(2,'0')})<sup>${d.anos}</sup><br>
+                        M = ${formataNum(d.salarioInicial, 2)} &times; ${formataNum(Math.pow(1+d.taxaCorrecao, d.anos), 6)}<br>
+                        <strong>M &approx; ${formatarMoeda(d.salarioFinalProjetado)}</strong>
+                    </div>
+
+                    <p>Ao final de ${d.anos} anos, o salário mensal corrigido passará a ser de <strong>${formatarMoeda(d.salarioFinalProjetado)}</strong>.</p>
+
+                    <h3>2. Cenário II: Fundo de Investimento com Aportes Crescentes</h3>
+                    <p>O plano consiste em realizar aportes anuais iniciando em <strong>${formatarMoeda(d.primeiroAporte)}</strong> no primeiro ano. A cada ano subsequente, o valor do aporte é reajustado em <strong>${formataNum(d.taxaCrescimentoAporte*100, 2)}%</strong>. O capital é alocado em um fundo que rende <strong>${formataNum(d.rentabilidadeAnual*100, 2)}% a.a.</strong> pelo período de <strong>${d.anos} anos</strong>.</p>
+
+                    <p><strong>Fórmula do Valor Futuro de uma Anuidade Crescente:</strong></p>
+                    <div class="math-block">VF = P &times; [ (1 + i)<sup>n</sup> - (1 + g)<sup>n</sup> ] / (i - g)</div>
+
+                    <p><strong>Onde:</strong></p>
+                    <ul class="var-list">
+                        <li><strong>P</strong> - Primeiro Aporte Anual = ${formatarMoeda(d.primeiroAporte)}</li>
+                        <li><strong>i</strong> - Taxa de Rendimento do Fundo = ${formataNum(d.rentabilidadeAnual*100,2)}% = ${formataNum(d.rentabilidadeAnual, 4)}</li>
+                        <li><strong>g</strong> - Taxa de Crescimento do Aporte = ${formataNum(d.taxaCrescimentoAporte*100,2)}% = ${formataNum(d.taxaCrescimentoAporte, 4)}</li>
+                        <li><strong>n</strong> - Número de anos = ${d.anos}</li>
+                    </ul>
+
+                    <p><strong>Cálculo do Montante Acumulado:</strong></p>
+                    <div class="math-block">
+                        VF = ${formataNum(d.primeiroAporte, 2)} &times; [ (1,${(d.rentabilidadeAnual*100)})<sup>${d.anos}</sup> - (1,${(d.taxaCrescimentoAporte*100).toString().padStart(2,'0')})<sup>${d.anos}</sup> ] / (${formataNum(d.rentabilidadeAnual, 4)} - ${formataNum(d.taxaCrescimentoAporte, 4)})<br>
+                        VF = ${formataNum(d.primeiroAporte, 2)} &times; [ ${formataNum(fat_i, 6)} - ${formataNum(fat_g, 6)} ] / ${formataNum(diferencaTaxas, 4)}<br>
+                        VF = ${formataNum(d.primeiroAporte, 2)} &times; ${formataNum(multiFator, 5)}<br>
+                        <strong>VF &approx; ${formatarMoeda(d.saldoAtual)}</strong>
+                    </div>
+
+                    <p><strong>Equivalência da Taxa Mensal e Juros Gerados:</strong></p>
+                    <div class="math-block">
+                        i<sub>mensal</sub> = (1 + ${formataNum(d.rentabilidadeAnual,2)})<sup>(1/12)</sup> - 1 &approx; ${formataNum(d.taxaMensal * 100, 5)}% ao mês<br>
+                        Juros<sub>mês</sub> = VF &times; i<sub>mensal</sub><br>
+                        Juros<sub>mês</sub> = ${formataNum(d.saldoAtual,2)} &times; ${formataNum(d.taxaMensal, 6)}<br>
+                        <strong>Juros<sub>mês</sub> &approx; ${formatarMoeda(d.jurosMensaisFinais)}</strong>
+                    </div>
+                    
+                    <!-- Rodapé da Página 1 -->
+                    <div class="page-footer">Página 1 de 2</div>
+                </div>
+
+                <div class="page-break"></div> <!-- Quebra Forçada -->
+
+                <!-- CONTEÚDO DA PÁGINA 2 -->
+                <div class="page-container">
+                    <h3>3. Tabela Comparativa Detalhada</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Métrica / Indicador Analisado</th>
+                                <th>Cenário I: Salário Mensal</th>
+                                <th>Cenário II: Fundo de Investimento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Base de Cálculo Inicial (Ano 1)</strong></td>
+                                <td>${formatarMoeda(d.salarioInicial)} / mês</td>
+                                <td>${formatarMoeda(d.primeiroAporte)} / ano</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Taxa de Evolução</strong></td>
+                                <td>${formataNum(d.taxaCorrecao*100,2)}% a.a. (Correção)</td>
+                                <td>${formataNum(d.taxaCrescimentoAporte*100,2)}% a.a. (Nos aportes)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Rendimento do Ativo</strong></td>
+                                <td>Não aplicável</td>
+                                <td>${formataNum(d.rentabilidadeAnual*100,2)}% a.a. (${formataNum(d.taxaMensal*100, 4)}% a.m.)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Valor Aporte/Salário no Ano ${d.anos}</strong></td>
+                                <td>${formatarMoeda(d.salarioFinalProjetado)} / mês</td>
+                                <td>${formatarMoeda(d.ultimoAporteRegistrado)} / ano</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Patrimônio Acumulado</strong></td>
+                                <td>Não aplicável</td>
+                                <td style="font-weight:bold; color:var(--primary-dark);">${formatarMoeda(d.saldoAtual)}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>RECEITA MENSAL NO ANO ${d.anos + 1}</strong></td>
+                                <td style="font-weight:bold; color:#b7791f;">${formatarMoeda(d.salarioFinalProjetado)}<br><span style="font-size: 8.5pt; color: #718096; font-weight:normal;">(Origem: Trabalho)</span></td>
+                                <td style="font-weight:bold; color:var(--success);">${formatarMoeda(d.jurosMensaisFinais)}<br><span style="font-size: 8.5pt; color: #718096; font-weight:normal;">(Origem: Juros Puros)</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="conclusion-box">
+                        <h3>Conclusão Estratégica: O Ponto de Virada</h3>
+                        <p>Ao final de ${d.anos} anos, o montante gerado de <strong>${formatarMoeda(d.jurosMensaisFinais)} apenas em juros mensais</strong> ${d.jurosMensaisFinais >= d.salarioFinalProjetado ? "supera integralmente" : "ainda não supera"} o seu salário mensal corrigido (<strong>${formatarMoeda(d.salarioFinalProjetado)}</strong>).</p>
+                        <p>${d.jurosMensaisFinais >= d.salarioFinalProjetado ? "Isso representa a conquista da <strong>Independência Financeira Plena</strong>: a partir deste ponto, os seus investimentos geram renda suficiente para cobrir e superar o seu custo de vida e padrão salarial atual, tornando o trabalho uma escolha." : "A renda passiva ainda não substitui plenamente a renda principal. Recomenda-se prolongar o período de acumulação ou buscar ativos de maior rentabilidade para atingir a Independência Financeira."}</p>
+                    </div>
+                    
+                    <!-- Rodapé da Página 2 -->
+                    <div class="page-footer">Página 2 de 2</div>
+                </div>
+            `;
+
+            document.getElementById('print-report').innerHTML = html;
+            window.print();
+        }
+
         window.onload = calcular;
     </script>
 </body>
